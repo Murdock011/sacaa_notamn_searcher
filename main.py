@@ -211,20 +211,25 @@ class App:
             logging.error(f"Failed to clear the screen: {e}")
 
     def printnotam(self, notam):
-        """Format a NOTAM for display."""
+        """Format a NOTAM for display with proper alignment for multiline content."""
         if not isinstance(notam, list):
-            return notam
+            return notam  # Return the error or message as is if it's not a list.
 
         codes = ["Q)", "A)", "B)", "C)", "D)", "E)", "F)", "G)"]
-        output = ""
+        formatted_output = ""
 
         for i, content in enumerate(notam):
             if i == 0:
-                output = f"{content}\n"
+                formatted_output += f"NOTAM ID: {content.strip()}\n"
+                formatted_output += "-" * 60 + "\n"
             else:
-                output += f"\t{codes[i - 1]} {content.strip()}\n"
+                lines = content.strip().split("\n")  # Handle multiline content
+                formatted_output += f"{codes[i - 1]:<4} {lines[0]}\n"  # First line
+                for line in lines[1:]:
+                    formatted_output += f"{' ' * 5}{line}\n"  # Indent subsequent lines
 
-        return output.strip()
+        formatted_output += "-" * 60
+        return formatted_output
 
     def main(self):
         """Main function to run the NOTAM finder application."""
@@ -244,6 +249,7 @@ class App:
             choice = input("Enter your choice: ").strip()
 
             if choice == "1":
+                self.display_menu()
                 icao_code = input("\nEnter ICAO airport code (e.g., FALA): ").strip()
                 if len(icao_code) != 4 or not icao_code.isalpha():
                     print("Invalid ICAO code. Please enter a 4-letter code.")
@@ -290,6 +296,7 @@ class App:
                 break
 
             else:
+                self.display_menu()
                 print("Invalid choice. Please try again.")
                 logging.warning(f"Invalid menu choice entered: {choice}")
 
