@@ -8,7 +8,8 @@ import math
 import csv
 import logging
 
-class App:
+
+class notamAPI:
     def __init__(self):
         # Configure logging
         logging.basicConfig(
@@ -16,16 +17,36 @@ class App:
             level=logging.INFO,
             format="%(asctime)s - %(levelname)s - %(message)s",
         )
-        logging.info("Application started.")
+        logging.info("API started.")
 
         # Ensure the NOTAM file is available
         if not path.isfile('notam.pdf'):
             self.update_notams()
 
+        if not path.isfile('airports.csv'):
+            print("\n" + "=" * 60)
+            print("\tNOTAM Finder\t\t")
+            print("=" * 60)
+            print("Error: 'airports.csv' file not found.")
+            print("Please copy the file to the application's root folder.")
+            logging.error("Airports CSV file missing. Application terminated.")
+            return
+
         # Load airports data and NOTAM information
-        self.AIRPORTS = {}
+        self.AIRPORTS = self.csv_to_dict('airports.csv')
         self.index, self.notams, self.date = self.load_pdf("notam.pdf")
-        self.main()
+    
+    def getIndex(self):
+        return self.index
+
+    def getNotams(self):
+        return self.notams
+
+    def getUpdatedDate(self):
+        return self.date
+
+    def getAirports(self):
+        return self.AIRPORTS
 
     def csv_to_dict(self, file_path):
         """
@@ -113,18 +134,6 @@ class App:
             logging.error(f"Failed to load PDF: {e}")
             return {}, [], "Unknown"
 
-    def display_menu(self):
-        """Display the main menu."""
-        self.clear()
-        print("\n" + "=" * 60)
-        print(f"\tNOTAM Finder\t\tUpdated Date: {self.date}")
-        print("=" * 60)
-        print("1. Search for NOTAMs")
-        print("2. Search for NOTAMs with buffer area")
-        print("3. Update NOTAMs")
-        print("4. Exit")
-        print("=" * 60)
-
     def fetch_notams(self, icao_code):
         """Fetch NOTAMs for a specific ICAO code."""
         output = []
@@ -200,16 +209,6 @@ class App:
         logging.info(f"Fetched {len(output)} NOTAMs for {icao_code.upper()} with buffer {buffer} km.")
         return output
 
-    def clear(self):
-        """Clear the terminal screen."""
-        try:
-            if name == 'nt':
-                _ = system('cls')  # Windows
-            else:
-                _ = system('clear')  # Mac and Linux
-        except Exception as e:
-            logging.error(f"Failed to clear the screen: {e}")
-
     def printnotam(self, notam):
         """Format a NOTAM for display with proper alignment for multiline content."""
         if not isinstance(notam, list):
@@ -231,18 +230,48 @@ class App:
         formatted_output += "-" * 60
         return formatted_output
 
+
+class App:
+    def __init__(self):
+        # Configure logging
+        logging.basicConfig(
+            filename="notam_finder.log",
+            level=logging.INFO,
+            format="%(asctime)s - %(levelname)s - %(message)s",
+        )
+        logging.info("Application started.")
+
+        self.NotamsAPI = notamAPI()
+
+        self.main()
+
+
+    def display_menu(self):
+        """Display the main menu."""
+        self.clear()
+        print("\n" + "=" * 60)
+        print(f"\tNOTAM Finder\t\tUpdated Date: {self.NotamsAPI.getUpdatedDate()}")
+        print("=" * 60)
+        print("1. Search for NOTAMs")
+        print("2. Search for NOTAMs with buffer area")
+        print("3. Update NOTAMs")
+        print("4. Exit")
+        print("=" * 60)
+
+
+    def clear(self):
+        """Clear the terminal screen."""
+        try:
+            if name == 'nt':
+                _ = system('cls')  # Windows
+            else:
+                _ = system('clear')  # Mac and Linux
+        except Exception as e:
+            logging.error(f"Failed to clear the screen: {e}")
+
+
     def main(self):
         """Main function to run the NOTAM finder application."""
-        if not path.isfile('airports.csv'):
-            print("\n" + "=" * 60)
-            print("\tNOTAM Finder\t\t")
-            print("=" * 60)
-            print("Error: 'airports.csv' file not found.")
-            print("Please copy the file to the application's root folder.")
-            logging.error("Airports CSV file missing. Application terminated.")
-            return
-
-        self.AIRPORTS = self.csv_to_dict('airports.csv')
         self.display_menu()
 
         while True:
@@ -257,9 +286,9 @@ class App:
                     continue
 
                 print(f"\nFetching NOTAMs for {icao_code.upper()}...\n")
-                notams = self.fetch_notams(icao_code.upper())
+                notams = self.NotamsAPI.fetch_notams(icao_code.upper())
                 for idx, notam in enumerate(notams, start=1):
-                    print(f"{idx}. {self.printnotam(notam)}\n")
+                    print(f"{idx}. {self.NotamsAPI.printnotam(notam)}\n")
 
             elif choice == "2":
                 ans = input("\nEnter ICAO airport code and buffer (e.g., FALA 5): ").strip().split()
@@ -281,13 +310,13 @@ class App:
                     continue
 
                 print(f"\nFetching NOTAMs for {icao_code.upper()} with buffer {buffer} km...\n")
-                notams = self.fetch_notams_with_buffer(icao_code.upper(), buffer)
+                notams = self.NotamsAPI.fetch_notams_with_buffer(icao_code.upper(), buffer)
                 for idx, notam in enumerate(notams, start=1):
-                    print(f"{idx}. {self.printnotam(notam)}\n")
+                    print(f"{idx}. {self.NotamsAPI.printnotam(notam)}\n")
 
             elif choice == "3":
                 print("\nUpdating NOTAMs to the latest version...")
-                self.update_notams()
+                self.NotamsAPI.update_notams()
                 self.display_menu()
 
             elif choice == "4":
@@ -302,4 +331,3 @@ class App:
 
 if __name__ == "__main__":
     app = App()
-    app.__init__()
