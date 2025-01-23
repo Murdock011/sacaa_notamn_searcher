@@ -44,6 +44,7 @@ class app():
 
     def updatenotams(self):
         urllib.request.urlretrieve("https://caasanwebsitestorage.blob.core.windows.net/notam-summaries-and-pib/SUMMARY.pdf", "notam.pdf")
+        self.index , self.notams, self.date = self.loadinPdf("notam.pdf")
 
     def split_with_multiple_delimiters(self,string, delimiters):
         # Join delimiters into a regex pattern
@@ -98,13 +99,13 @@ class app():
                     index[code]= temp + [i]
         return index , notams, date
 
-    def display_menu(self,date):
+    def display_menu(self):
         self.clear()
         """
         Display the main menu.
         """
         print("\n" + "=" * 60)
-        print("\tNOTAM Finder\t\tUpdated Date : " + date)
+        print("\tNOTAM Finder\t\tUpdated Date : " + self.date)
         print("=" * 60)
         print("1. Search for NOTAMs")
         print("2. Search for NOTAMs with buffer area")
@@ -233,7 +234,7 @@ class app():
 
         if not(path.isfile('notam.pdf')):
             self.updatenotams()
-        self.display_menu(self.date)
+        self.display_menu()
         while True:
 
             choice = input("Enter your choice: ").strip()
@@ -270,7 +271,7 @@ class app():
             elif choice == "3":
                 print("\nUpdating the notams to the latest version...")
                 self.updatenotams()
-                self.display_menu(self.Date)
+                self.display_menu()
             elif choice == "4":
                 print("\nExiting the application. Safe travels!")
                 break
