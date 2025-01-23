@@ -268,7 +268,7 @@ class app():
             elif choice == "3":
                 print("\nUpdating the notams to the latest version...")
                 self.updatenotams()
-                _ , _, updatedDate = lself.oadinPdf('notam.pdf')
+                _ , _, updatedDate = self.loadinPdf('notam.pdf')
                 self.display_menu(updatedDate)
             elif choice == "4":
                 print("\nExiting the application. Safe travels!")
