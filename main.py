@@ -11,6 +11,7 @@ class app():
     def __init__(self):
     # list of airports in South Africa
         self.AIRPORTS = {}
+        self.index , self.notams, self.date = self.loadinPdf("notam.pdf")
         self.main()
 
     def csv_to_dict(self,file_path):
@@ -75,24 +76,26 @@ class app():
         text = re.sub(id[1:9]+" - "+date+" ATNS .*/"+str(PDF_LENGTH), '',text)
 
         temp = text.split('NOTAMN')
+        
         for i in range(0,len(temp)-1):
             temp[i+1] = temp[i][-9:] + 'NOTAMN'+temp[i+1]
         temp = temp[1:]
 
+
         for i in range(0,len(temp)):
-            temp[i] = self.split_with_multiple_delimiters(temp[i], ["Q)","A)","B)","C)","D)","E)","F)","G)"])
+            temp[i] = self.split_with_multiple_delimiters(temp[i], ["Q) ","A) ","B) ","C) ","D) ","E) ","F) ","G) "])
             temp[i][-1] = temp[i][-1][:-10]
         notams += temp
-
+        
         for i, notam in enumerate(notams):
-            codes = notam[2].split(' ')[1:-1]
+            codes = notam[2].split(' ')
+            
             for _, code in enumerate(codes):
-                if code not in index.keys():
+                if code not in index.keys() and code != "":
                     index[code] = [i] #list(i)
-                else:
+                elif code != "":
                     temp = index[code]
                     index[code]= temp + [i]
-
         return index , notams, date
 
     def display_menu(self,date):
@@ -110,13 +113,12 @@ class app():
         print("=" * 60)
 
     def fetch_notams(self,icao_code):
-        index , notams, _ = self.loadinPdf('notam.pdf')
         output = []
-        if icao_code not in index:
+        if icao_code.upper() not in self.index.keys():
             return ["No NOTAMS found for "+icao_code+"."]
-        fetch = index[icao_code]
+        fetch = self.index[icao_code]
         for _ ,a in enumerate(fetch):
-            output.append( notams[a])
+            output.append( self.notams[a])
         return output
 
     def parse_coordinate(self,coord):
@@ -176,21 +178,21 @@ class app():
         # Check if the distance is less than or equal to the sum of the radii
         return distance <= (radius1 + radius2 + buffer)
 
-    def fetch_notams_with_buffer(self,index,notams,icao_code,buffer):
+    def fetch_notams_with_buffer(self,icao_code,buffer):
         #circles_intersect("3259S01810E001", "3257S01803E001", 5)
-        if icao_code not in self.AIRPORTS.keys():
+        if icao_code.upper() not in self.AIRPORTS.keys():
             return ["No NOTAMS found for "+icao_code+"."]
-        coordport = self.AIRPORTS[icao_code]
+        coordport = self.AIRPORTS[icao_code.upper()]
         output= []
         outnums=[]
-        outnums = index[icao_code]
-        for i , a in enumerate(notams):
+        outnums = self.index[icao_code]
+        for i , a in enumerate(self.notams):
             notamcoord = a[1].split("/")[-1]
             if self.circles_intersect(coordport, notamcoord, buffer):
                 if i not in outnums:
                     outnums.append(i)
         for _,a in enumerate(outnums):
-            output.append( notams[a])
+            output.append( self.notams[a])
         return output
 
     def clear(self):
@@ -204,6 +206,8 @@ class app():
             _ = system('clear')
 
     def printnotam(self,notam):
+        if type(notam) is not list:
+            return notam
         codes = ["Q)","A)","B)","C)","D)","E)","F)","G)"]
         output = ''
         for i , a in enumerate(notam):
@@ -229,9 +233,7 @@ class app():
 
         if not(path.isfile('notam.pdf')):
             self.updatenotams()
-
-        index , allnotams, updatedDate = self.loadinPdf('notam.pdf')
-        self.display_menu(updatedDate)
+        self.display_menu(self.date)
         while True:
 
             choice = input("Enter your choice: ").strip()
@@ -261,15 +263,14 @@ class app():
                     continue
 
                 print(f"\nFetching NOTAMs for {icao_code.upper()}...\n")
-                notams = self.fetch_notams_with_buffer(index,allnotams,icao_code.upper(),buffer)
+                notams = self.fetch_notams_with_buffer(icao_code.upper(),buffer)
                 for idx, notam in enumerate(notams, start=1):
                     print(f"{idx}. {self.printnotam(notam)}\n")
 
             elif choice == "3":
                 print("\nUpdating the notams to the latest version...")
                 self.updatenotams()
-                _ , _, updatedDate = self.loadinPdf('notam.pdf')
-                self.display_menu(updatedDate)
+                self.display_menu(self.Date)
             elif choice == "4":
                 print("\nExiting the application. Safe travels!")
                 break
