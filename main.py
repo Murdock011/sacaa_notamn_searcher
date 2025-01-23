@@ -9,6 +9,8 @@ import csv
 
 class app():
     def __init__(self):
+        if not(path.isfile('notam.pdf')):
+            self.updatenotams()
     # list of airports in South Africa
         self.AIRPORTS = {}
         self.index , self.notams, self.date = self.loadinPdf("notam.pdf")
@@ -47,6 +49,7 @@ class app():
         self.index , self.notams, self.date = self.loadinPdf("notam.pdf")
 
     def split_with_multiple_delimiters(self,string, delimiters):
+
         # Join delimiters into a regex pattern
         regex_pattern = '|'.join(map(re.escape, delimiters))
         # Use re.split to split the string by the regex pattern
@@ -232,8 +235,7 @@ class app():
             print("Failed to load airport data, please copy file to folder root")
             return
 
-        if not(path.isfile('notam.pdf')):
-            self.updatenotams()
+        
         self.display_menu()
         while True:
 
