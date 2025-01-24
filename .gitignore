@@ -1,3 +1,5 @@
 
 notam.pdf
 *.log
+metars.cache.csv.gz
+metars.cache.csv
