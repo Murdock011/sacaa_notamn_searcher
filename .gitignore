@@ -3,3 +3,9 @@ notam.pdf
 *.log
 metars.cache.csv.gz
 metars.cache.csv
+metars.cache2.csv
+metars.cache.csv2
+metars.csv
+tafs.cache.csv
+tafs.cache.csv.gz
+tafs.csv
